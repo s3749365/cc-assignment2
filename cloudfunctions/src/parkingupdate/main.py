@@ -1,5 +1,6 @@
 # Imports
 import csv
+import os
 import logging
 import sqlalchemy
 from sqlalchemy import text, create_engine
@@ -36,6 +37,9 @@ database = sqlalchemy.create_engine(
     ),
 )
 
+# TMP FILE
+filename = '/tmp/sql_parking.csv'
+
 ### LOGICS
 PRESENT='Present'
 Unoccupied='Unoccupied'
@@ -60,6 +64,8 @@ def update(request):
     validate_table()
 
     try:
+        if os.path.exists(filename):
+            os.remove(filename)
         with open(filename, 'w') as f:
             wr = csv.writer(f)
             for row in rows:
@@ -76,7 +82,6 @@ def update(request):
         """)
         with database.connect() as conn:
             conn.execute(query)
-
     except Exception as err:
         logger.exception(err)
         return Response(
