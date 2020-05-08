@@ -1,7 +1,6 @@
 # Imports
 import csv
 import os
-import logging
 import sqlalchemy
 from sqlalchemy import text, create_engine
 from sodapy import Socrata
@@ -60,7 +59,6 @@ def validate_table():
 
 # RUNTIME Process
 def update(request):
-    logging.info("Validating Database Table")
     validate_table()
 
     try:
@@ -83,7 +81,6 @@ def update(request):
         with database.connect() as conn:
             conn.execute(query)
     except Exception as err:
-        logger.exception(err)
         return Response(
             status=500,
             response=err,
