@@ -7,10 +7,7 @@ from sodapy import Socrata
 from flask import Response
 import requests
 
-project_id="cc-assignment-2-parking-space"
-
-### LOGS
-logger =logging.getLogger()
+project_id="cca2"
 
 ### CLIENTS
 # SODA V2 Client
@@ -22,7 +19,7 @@ db_user="root"
 db_pass="root"
 db_name="parking"
 db_instance="parkinginfo"
-cloud_sql_connection_name="cc-assignment-2-parking-space:australia-southeast1:parkinginfo"
+cloud_sql_connection_name="cca2-277004:australia-southeast1:parkinginfo"
 database = sqlalchemy.create_engine(
     sqlalchemy.engine.url.URL(
         drivername="mysql+pymysql",
