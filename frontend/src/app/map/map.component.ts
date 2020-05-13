@@ -1,7 +1,10 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef } from '@angular/core';
+import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, Output } from '@angular/core';
 import { Observable, fromEvent, throwError } from 'rxjs';
-import { debounceTime, retry } from 'rxjs/operators';
-import { ParkingLocatorService } from './parking-locator.service';
+import { debounceTime, retry, switchMap } from 'rxjs/operators';
+import { ParkingLocatorService } from '../services/parking-locator.service';
+import { LocationService } from '../services/location-service';
+import { Parking } from '../model/parking';
+
 
 
 
@@ -10,27 +13,30 @@ import { ParkingLocatorService } from './parking-locator.service';
   templateUrl: './map.component.html',
   styleUrls: ['./map.component.css']
 })
-export class MapComponent implements OnInit {
+export class MapComponent {
 
   private map: google.maps.Map;
-
+  private autocomplete: google.maps.places.Autocomplete;
+  private directionsService = new google.maps.DirectionsService();
+  private directionsRenderer = new google.maps.DirectionsRenderer();
+  private lastPosition;
   private icons;
-
-  private markers: google.maps.Marker[] = [];
-
-
-  private mapOptions: google.maps.MapOptions = {
-    zoom: 17,
-  };
+  private currentLocationMarker: google.maps.Marker;
+  private parkings: Parking[] = [];
 
 
 
-  private coordinates: google.maps.LatLng;
+  @Output()
+  public parkingsBasedOnCurrentLocation: boolean = true;
+
+  @Output()
+  public sidebar: boolean = true;
 
   @ViewChild('mapContainer', { static: false }) gmap: ElementRef;
+  @ViewChild('addressTxt', { static: false }) searchTxt: ElementRef;
 
 
-  constructor(private parkingService: ParkingLocatorService) {
+  constructor(private parkingService: ParkingLocatorService, private locationService: LocationService) {
 
     var iconBase = 'assets/icons/';
 
@@ -45,76 +51,168 @@ export class MapComponent implements OnInit {
   }
 
 
-  ngOnInit(): void {
+  public toggleSidebar() {
+    this.sidebar = !this.sidebar;
   }
-
 
   ngAfterViewInit() {
 
-    this.mapInitializer();
+    this.initiliseMap();
 
   }
 
-  mapInitializer() {
+  initiliseMap() {
 
 
 
-    navigator.geolocation.getCurrentPosition(res => {
+    this.locationService.getCurrentLocation().subscribe(pos => {
 
-      this.coordinates = this.getPostion(res.coords.latitude, res.coords.longitude);
+      this.lastPosition = pos;
 
-      this.mapOptions.center = this.coordinates
+      const coordinates = this.getCoordinates(pos);
 
-      this.map = new google.maps.Map(this.gmap.nativeElement, this.mapOptions);
 
-      this.map.panTo(this.coordinates);
+      if (!this.map) {
+        this.createMap(coordinates)
+      }
 
-      this.setMarker(this.coordinates, this.map, "car");
+      this.updateMap(coordinates, pos.coords.accuracy);
 
-      this.showParkings(res);
+      this.showParkings(coordinates);
 
-      navigator.geolocation.watchPosition(res => {
+    });
 
-        this.showParkings(res);
+
+  }
+
+
+  private updateMap(coordinates: google.maps.LatLng, accuracy) {
+
+    var circle = new google.maps.Circle(
+      { center: coordinates, radius: accuracy });
+
+
+    this.autocomplete.setBounds(circle.getBounds());
+
+    this.map.setCenter(coordinates);
+
+    this.map.panTo(coordinates);
+
+    this.currentLocationMarker.setMap(null);
+
+    this.currentLocationMarker = this.getMarker(coordinates, this.map, "car");
+
+  }
+
+  private createMap(coordinates: google.maps.LatLng) {
+
+
+    this.autocomplete = new google.maps.places.Autocomplete(this.searchTxt.nativeElement);
+
+    const self = this;
+
+    this.autocomplete.addListener("place_changed", () => {
+
+      self.showParkingsBasedOnSelectedPlace();
+
+    });
+
+    const mapOptions: google.maps.MapOptions = {
+      zoom: 17,
+      mapTypeControl: false,
+    };
+
+    this.map = new google.maps.Map(this.gmap.nativeElement, mapOptions);
+
+    this.directionsRenderer.setMap(this.map);
+
+    this.currentLocationMarker = this.getMarker(coordinates, this.map, "car");
+
+  }
+
+  private showParkingsBasedOnSelectedPlace() {
+
+    const place = this.autocomplete.getPlace();
+
+    this.parkingsBasedOnCurrentLocation = false;
+
+    this.showParkings(place.geometry.location)
+
+  }
+
+  public refresh() {
+
+    if (this.parkingsBasedOnCurrentLocation) {
+
+      this.useCurrentLocation();
+
+    } else {
+
+      this.showParkingsBasedOnSelectedPlace();
+
+    }
+
+
+  }
+
+
+  public useCurrentLocation() {
+
+    this.parkingsBasedOnCurrentLocation = true;
+
+    const coordinates = this.getCoordinates(this.lastPosition);
+
+    this.showParkings(coordinates)
+
+  }
+
+  private showParkings(coordinates: google.maps.LatLng) {
+
+
+
+    this.parkingService.getParkings(coordinates.lat(), coordinates.lng(), 500)
+      .subscribe(resp => {
+
+        this.parkings.splice(0, this.parkings.length);
+
+        resp.forEach(parking => {
+          this.parkings.push(parking);
+        });
+
+      }, () => {
+
+        this.parkings.splice(0, this.parkings.length);
 
       });
 
-    });
-
 
 
   }
 
-  private showParkings(res: Position) {
+  private calcRoute(start: google.maps.LatLng, end: google.maps.LatLng) {
 
-    this.parkingService.getParkings(this.coordinates.lat(), this.coordinates.lng(), 500).pipe(
-      debounceTime(10000)
-    ).subscribe(resp => {
 
-      this.removeMarkers();
+    var request = {
+      origin: start,
+      destination: end,
+      travelMode: google.maps.TravelMode.DRIVING
 
-      this.coordinates = this.getPostion(res.coords.latitude, res.coords.longitude);
+    };
 
-      this.mapOptions.center = this.coordinates
+    const self = this;
 
-      this.setMarker(this.coordinates, this.map, "car");
-
-      resp.forEach((p) => {
-        if (!p.occupied) {
-          let c = this.getPostion(p.lat, p.lng);
-          this.setMarker(c, this.map, "parking");
-        }
-
-      })
-
+    this.directionsService.route(request, function (response, status) {
+      if (status == 'OK') {
+        self.directionsRenderer.setDirections(response);
+      }
     });
   }
 
-  private getPostion(lat: number, lng: number): google.maps.LatLng {
-    return new google.maps.LatLng(lat, lng);
+  private getCoordinates(position: Position): google.maps.LatLng {
+    return new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
   }
 
-  private setMarker(c: google.maps.LatLng, map: google.maps.Map, icon: string) {
+  private getMarker(c: google.maps.LatLng, map: google.maps.Map, icon: string) {
 
     let m = new google.maps.Marker({
       position: c,
@@ -124,17 +222,10 @@ export class MapComponent implements OnInit {
 
     m.setMap(map);
 
-    this.markers.push(m)
+    return m;
 
   }
 
-  private removeMarkers() {
 
-    this.markers.forEach(m => {
-      m.setMap(null);
-    })
-
-    this.markers = [];
-  }
 
 }

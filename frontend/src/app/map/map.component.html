@@ -1,3 +1,55 @@
+<div class="row no-gutters h-100">
+
+    <div class="col-2 h-100 bg-light px-3" *ngIf="sidebar">
+        <div class="text-right my-3">
+            <i class="far fa-window-close fa-lg" (click)="toggleSidebar()"></i>
+        </div>
+        <hr />
+
+        <div class="input-group">
+            <input type="text" class="form-control" id="address" #addressTxt>
+            <div class="input-group-append">
+                <div class="input-group-text">
+                    <i class="fas fa-search fa-rotate-90"></i>
+                </div>
+            </div>
+        </div>
+
+        <button class="btn btn-primary my-2 w-100" *ngIf="!parkingsBasedOnCurrentLocation"
+            (click)="useCurrentLocation()">
+            Use Current location for showing parkings
+        </button>
+
+        <div class="alert alert-success my-2 small" *ngIf="parkingsBasedOnCurrentLocation">
+            <i class="fas fa-info-circle"></i> Parkings are shown using current location.
+        </div>
+
+        <button class="btn btn-success w-100" (click)="refresh()">Refresh</button>
 
 
-<div #mapContainer id="map"></div>
+
+        <hr />
+
+        <div class="list-group my-2">
+            <a href="#" class="list-group-item list-group-item-action active">
+                <div class="d-flex w-100 justify-content-between">
+                    <h5 class="mb-1">List group item heading</h5>
+                    <small>3 days ago</small>
+                </div>
+                <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius
+                    blandit.</p>
+                <small>Donec id elit non mi porta.</small>
+            </a>
+        </div>
+
+    </div>
+    <div class="col h-100">
+        <div class="map-btn">
+            <button class="btn btn-secondary" (click)="toggleSidebar()">
+                <i class="fas fa-bars"></i>
+            </button>
+        </div>
+        <div #mapContainer id="map" class="h-100"></div>
+    </div>
+
+</div>
