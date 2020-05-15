@@ -1,6 +1,4 @@
-import { Component, OnInit, AfterViewInit, ViewChild, ElementRef, Output } from '@angular/core';
-import { Observable, fromEvent, throwError } from 'rxjs';
-import { debounceTime, retry, switchMap } from 'rxjs/operators';
+import { Component, ViewChild, ElementRef, ChangeDetectorRef } from '@angular/core';
 import { ParkingLocatorService } from '../services/parking-locator.service';
 import { LocationService } from '../services/location-service';
 import { Parking } from '../model/parking';
@@ -22,21 +20,24 @@ export class MapComponent {
   private lastPosition;
   private icons;
   private currentLocationMarker: google.maps.Marker;
-  private parkings: Parking[] = [];
+  private parkingMarkers: google.maps.Marker[] = [];
 
 
 
-  @Output()
+
+  public parkings: Parking[] = [];
+  public isLoadingParkings: boolean = true;
   public parkingsBasedOnCurrentLocation: boolean = true;
-
-  @Output()
   public sidebar: boolean = true;
+  public parkingConfig = {
+    distance: 500
+  };
 
   @ViewChild('mapContainer', { static: false }) gmap: ElementRef;
   @ViewChild('addressTxt', { static: false }) searchTxt: ElementRef;
 
 
-  constructor(private parkingService: ParkingLocatorService, private locationService: LocationService) {
+  constructor(private cd: ChangeDetectorRef, private parkingService: ParkingLocatorService, private locationService: LocationService) {
 
     var iconBase = 'assets/icons/';
 
@@ -100,7 +101,7 @@ export class MapComponent {
 
     this.currentLocationMarker.setMap(null);
 
-    this.currentLocationMarker = this.getMarker(coordinates, this.map, "car");
+    this.currentLocationMarker = this.getMarker(coordinates, "car");
 
   }
 
@@ -126,7 +127,7 @@ export class MapComponent {
 
     this.directionsRenderer.setMap(this.map);
 
-    this.currentLocationMarker = this.getMarker(coordinates, this.map, "car");
+    this.currentLocationMarker = this.getMarker(coordinates, "car");
 
   }
 
@@ -168,25 +169,42 @@ export class MapComponent {
 
   private showParkings(coordinates: google.maps.LatLng) {
 
+    this.map.setCenter(coordinates);
 
-
-    this.parkingService.getParkings(coordinates.lat(), coordinates.lng(), 500)
+    this.parkingService.getParkings(coordinates.lat(), coordinates.lng(), this.parkingConfig.distance)
       .subscribe(resp => {
 
         this.parkings.splice(0, this.parkings.length);
+        this.removeMarkers();
 
         resp.forEach(parking => {
+          var coordinates = new google.maps.LatLng(parking.lat, parking.lng);
+          var marker = this.getMarker(coordinates, "parking")
+          this.parkingMarkers.push(marker);
           this.parkings.push(parking);
         });
+
+        this.isLoadingParkings = false;
+
+        this.cd.detectChanges();
+
 
       }, () => {
 
         this.parkings.splice(0, this.parkings.length);
+        this.isLoadingParkings = false;
 
       });
 
 
 
+  }
+
+  public directUser(parking: Parking) {
+    var start = this.getCoordinates(this.lastPosition);
+    var end = new google.maps.LatLng(parking.lat, parking.lng);
+    this.calcRoute(start, end);
+    this.toggleSidebar();
   }
 
   private calcRoute(start: google.maps.LatLng, end: google.maps.LatLng) {
@@ -212,17 +230,26 @@ export class MapComponent {
     return new google.maps.LatLng(position.coords.latitude, position.coords.longitude);
   }
 
-  private getMarker(c: google.maps.LatLng, map: google.maps.Map, icon: string) {
+  private getMarker(c: google.maps.LatLng, icon: string) {
 
     let m = new google.maps.Marker({
       position: c,
-      map: map,
+      map: this.map,
       icon: this.icons[icon].url
     });
 
-    m.setMap(map);
+    m.setMap(this.map);
 
     return m;
+
+  }
+
+
+  private removeMarkers() {
+
+    this.parkingMarkers.forEach(m => m.setMap(null));
+
+    this.parkingMarkers.splice(0, this.parkingMarkers.length);
 
   }
 

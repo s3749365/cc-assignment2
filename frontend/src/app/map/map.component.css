@@ -1,6 +1,5 @@
 .map-container{
    position: relative; 
-   margin-left:200px;
 }
 
 .map-btn{
@@ -12,7 +11,7 @@
 
 .map-sidebar{
   height: 100%;
-  width:200px;
+  width:350px;
   position: fixed;
   z-index: 1;
   top: 0;
@@ -20,6 +19,8 @@
   background-color: #111;
   overflow-x: hidden;
   transition: 0.5s;
-  padding-top: 60px;
+}
 
+.sidebar-open{
+   margin-left:350px;
 }

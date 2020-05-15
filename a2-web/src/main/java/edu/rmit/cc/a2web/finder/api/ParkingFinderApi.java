@@ -1,7 +1,6 @@
 package edu.rmit.cc.a2web.finder.api;
 
-import com.google.auth.Credentials;
-import com.google.cloud.bigquery.*;
+
 import edu.rmit.cc.a2web.core.api.BaseApiController;
 import edu.rmit.cc.a2web.finder.core.ParkingSpaceFinderService;
 import edu.rmit.cc.a2web.model.Parking;
@@ -13,7 +12,7 @@ import java.util.List;
 
 
 @RestController
-@RequestMapping(value = "")
+@RequestMapping(value = "api")
 public class ParkingFinderApi extends BaseApiController {
 
 
@@ -21,7 +20,7 @@ public class ParkingFinderApi extends BaseApiController {
     private ParkingSpaceFinderService parkingSpaceFinderService;
 
     @GetMapping("/find")
-    public ResponseEntity find(double lng, double lat, Integer dist) throws InterruptedException {
+    public ResponseEntity find(double lng, double lat, Integer dist) {
 
         List<Parking> result = parkingSpaceFinderService.findParkingSpaces(lng, lat, dist);
 

@@ -1,6 +1,5 @@
-<div class="row no-gutters h-100">
-
-    <div class="col-2 h-100 bg-light px-3" *ngIf="sidebar">
+<div class=" h-100">
+    <div class="map-sidebar bg-light px-3" [ngClass]="{'d-none':!sidebar}">
         <div class="text-right my-3">
             <i class="far fa-window-close fa-lg" (click)="toggleSidebar()"></i>
         </div>
@@ -17,33 +16,67 @@
 
         <button class="btn btn-primary my-2 w-100" *ngIf="!parkingsBasedOnCurrentLocation"
             (click)="useCurrentLocation()">
-            Use Current location for showing parkings
+            Use Current location for search
         </button>
 
         <div class="alert alert-success my-2 small" *ngIf="parkingsBasedOnCurrentLocation">
             <i class="fas fa-info-circle"></i> Parkings are shown using current location.
         </div>
 
-        <button class="btn btn-success w-100" (click)="refresh()">Refresh</button>
 
+        <form>
+            <div class="form-group row">
+                <label for="inputPassword" class="col-sm-3 col-form-label">Distance:</label>
+                <div class="col-sm-9">
+                    <div class="input-group">
+                        <select class="form-control" name="distance" [(ngModel)]="parkingConfig.distance">
+                            <option selected value="500">500 m</option>
+                            <option value="1000">1 km</option>
+                            <option  value="1500">1.5 km</option>
+                        </select>
+                        <div class="input-group-append">
+                            <div class="input-group-text" (click)="refresh()">
+                                <i class="fas fa-sync"></i>
+                            </div>
+                        </div>
+                    </div>
+
+
+                </div>
+            </div>
+        </form>
 
 
         <hr />
 
-        <div class="list-group my-2">
-            <a href="#" class="list-group-item list-group-item-action active">
+        <div class="text-center" *ngIf="isLoadingParkings">
+            <i class="fas fa-circle-notch fa-spin fa-2x"></i>
+        </div>
+
+        <div class="alert alert-info" *ngIf="!isLoadingParkings && parkings?.length==0">
+            <i class="far fa-frown"></i> No empty parking found. Refresh or try another location.
+        </div>
+
+
+        <div class="list-group my-2" *ngIf="!isLoadingParkings && parkings?.length>0">
+
+            <div class="list-group-item list-group-item-action my-2" *ngFor="let parking of parkings">
+
                 <div class="d-flex w-100 justify-content-between">
-                    <h5 class="mb-1">List group item heading</h5>
-                    <small>3 days ago</small>
+                    <h5 class="mb-1">{{parking.streetName}}</h5>
+                    <small>{{parking.distance}} Meters</small>
+                    <button class="btn btn-primary" (click)="directUser(parking)">
+                        <i class="fas fa-directions"></i>
+                    </button>
                 </div>
-                <p class="mb-1">Donec id elit non mi porta gravida at eget metus. Maecenas sed diam eget risus varius
-                    blandit.</p>
-                <small>Donec id elit non mi porta.</small>
-            </a>
+                <p class="mb-1">{{parking.sign}}</p>
+
+            </div>
+
         </div>
 
     </div>
-    <div class="col h-100">
+    <div class="map-container h-100" [ngClass]="{'sidebar-open':sidebar}">
         <div class="map-btn">
             <button class="btn btn-secondary" (click)="toggleSidebar()">
                 <i class="fas fa-bars"></i>

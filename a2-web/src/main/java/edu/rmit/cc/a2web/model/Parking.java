@@ -7,6 +7,10 @@ public class Parking {
     private boolean occupied;
     private double lat;
     private double lng;
+    private String streetName;
+    private String areaName;
+    private String sign;
+    private int distance;
 
 
 
@@ -51,6 +55,38 @@ public class Parking {
 
     public void setLng(double lng) {
         this.lng = lng;
+    }
+
+    public String getStreetName() {
+        return streetName;
+    }
+
+    public void setStreetName(String streetName) {
+        this.streetName = streetName;
+    }
+
+    public String getAreaName() {
+        return areaName;
+    }
+
+    public void setAreaName(String areaName) {
+        this.areaName = areaName;
+    }
+
+    public String getSign() {
+        return sign;
+    }
+
+    public void setSign(String sign) {
+        this.sign = sign;
+    }
+
+    public int getDistance() {
+        return distance;
+    }
+
+    public void setDistance(int distance) {
+        this.distance = distance;
     }
 
 
