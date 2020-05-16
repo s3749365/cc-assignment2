@@ -169,6 +169,8 @@ export class MapComponent {
 
   private showParkings(coordinates: google.maps.LatLng) {
 
+    const self = this;
+
     this.map.setCenter(coordinates);
 
     this.parkingService.getParkings(coordinates.lat(), coordinates.lng(), this.parkingConfig.distance)
@@ -180,6 +182,7 @@ export class MapComponent {
         resp.forEach(parking => {
           var coordinates = new google.maps.LatLng(parking.lat, parking.lng);
           var marker = this.getMarker(coordinates, "parking")
+          google.maps.event.addListener(marker, 'click', () => self.directUser(parking));
           this.parkingMarkers.push(marker);
           this.parkings.push(parking);
         });
@@ -204,7 +207,7 @@ export class MapComponent {
     var start = this.getCoordinates(this.lastPosition);
     var end = new google.maps.LatLng(parking.lat, parking.lng);
     this.calcRoute(start, end);
-    this.toggleSidebar();
+    this.sidebar = false;
   }
 
   private calcRoute(start: google.maps.LatLng, end: google.maps.LatLng) {
