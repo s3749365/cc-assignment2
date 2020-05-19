@@ -30,7 +30,7 @@ export class MapComponent {
   public parkingsBasedOnCurrentLocation: boolean = true;
   public sidebar: boolean = true;
   public parkingConfig = {
-    distance: 500
+    distance: 300
   };
 
   @ViewChild('mapContainer', { static: false }) gmap: ElementRef;
