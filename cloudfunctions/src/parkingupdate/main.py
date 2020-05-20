@@ -12,7 +12,7 @@ project_id="cca2"
 ### CLIENTS
 # SODA V2 Client
 sodaClient=Socrata("data.melbourne.vic.gov.au",None)
-rows=sodaClient.get("vh2v-4nfs")
+rows=sodaClient.get("vh2v-4nfs", limit=5000)
 
 # Cloud SQL Database
 db_user="root"
