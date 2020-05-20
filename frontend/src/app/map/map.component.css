@@ -1,6 +1,26 @@
-#map {
-    min-height: 100vh;
-    height: 100%;
-    width: 100%;
-   }
+.map-container{
+   position: relative; 
+}
 
+.map-btn{
+    position:absolute;
+    top: 1.5em;
+    left: 1.5em;
+   z-index: 1000;
+}
+
+.map-sidebar{
+  height: 100%;
+  width:350px;
+  position: fixed;
+  z-index: 1;
+  top: 0;
+  left: 0;
+  background-color: #111;
+  overflow-x: hidden;
+  transition: 0.5s;
+}
+
+.sidebar-open{
+   margin-left:350px;
+}

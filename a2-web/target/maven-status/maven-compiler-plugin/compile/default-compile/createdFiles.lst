@@ -1,6 +1,0 @@
-edu\rmit\cc\a2web\core\api\BaseApiController.class
-edu\rmit\cc\a2web\core\config\GCloudConfig.class
-edu\rmit\cc\a2web\finder\core\ParkingSpaceFinderService.class
-edu\rmit\cc\a2web\finder\api\ParkingFinderApi.class
-edu\rmit\cc\a2web\A2WebApplication.class
-edu\rmit\cc\a2web\model\Parking.class
