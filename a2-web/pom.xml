@@ -95,7 +95,7 @@
 
 				<configuration>
 					<deploy.stopPreviousVersion>true</deploy.stopPreviousVersion>
-					<deploy.version>9</deploy.version>
+					<deploy.version>10</deploy.version>
 					<deploy.projectId>cca2-277004</deploy.projectId>
 				</configuration>
 			</plugin>
